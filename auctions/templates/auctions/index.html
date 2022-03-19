@@ -1,0 +1,33 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Active Listings</h2>
+      {% for listing in listings %}
+        {% if listing.active %}
+          <div id="container">
+            <div id="img">
+              {% if listing.img_url %}
+                <img src="{{listing.img_url}}" width=250px height=270px; />
+              {% else %}
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png" width=250px height=270px; />  
+              {% endif %}
+            </div>
+            <div id="content">
+              <h4>{{ listing.title }}</h4>
+              <p><span style="font-weight:700;">Current price:</span> <span style="font-weight:600;">{{ listing.price }}$</span></p>
+              <p style="color:rgb(113, 170, 172); font-size:13px;">Created at {{ listing.time }}</p>
+              {% if request.user == listing.owner %}
+                {% if listing.active %}
+                  <p style="font-weight:bold; color:green;">Open</p>
+                {% endif %}
+              {% endif %}
+              <a href="{% url 'listing' listing.id %}"><button id="view" class="btn">View Listing</button></a>
+            </div>
+            <div class="des">
+              <h5 style="color:rgb(38, 12, 145);">Description:</h5>
+              {{ listing.description }}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+{% endblock %}

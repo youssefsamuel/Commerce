@@ -1,0 +1,108 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div>
+      <h2 >Listing: {{ listing.title }} </h2>
+      {% if request.user == listing.owner %}
+        <form id="btn_listing" action="{% url 'close' listing.id %}" method="post">
+          {% csrf_token %}
+          {% if listing.active %}
+          <input type="submit" id="close" value="Close Auction" />
+          {% else %}
+          <input type="submit" id="closed" value="Closed" disabled />
+          {% endif %}
+        </form>
+      {% endif %}
+    </div>
+    <div>
+      <form  action="{% url 'watchlist' %}" method="post">
+        {% csrf_token %}
+        <input hidden type="text" name="listing" value="{{ listing.id }}" />
+        {% if listing in watchlists %}
+        <input type="submit" id="remove" value="Remove from Watchlist" />
+        {% else %}
+        <input type="submit" id="add" value="Add to Watchlist" />
+        {% endif %}
+      </form>
+    </div>
+    <br />
+    <div id="infos">
+      <p><span style="font-weight:700;">{{ listing.title }}:</span> {{ listing.description }}</p>
+      <p><span style="font-weight:700;">Initial Price:</span> <span style="font-weight:600;">${{listing.price}}</span></p>
+      <p><span style="font-weight:700;">Current Price:</span> <span style="font-weight:600;">{%if bid_winner%}${{ bid_winner.value }}{% else %}${{listing.price}}{% endif%}</span></p>
+      <p><span style="font-weight:700;">Listed By: </span> {{ listing.owner.first_name }} {{listing.owner.last_name}}</p>
+      <p><span style="font-weight:700;">Uploaded: </span> {{ listing.time }}</p>
+      <p><span style="font-weight:700;">Categories: </span></p>
+      <ul>
+        {% for category in categories %}
+          <li>{{ category }}</li>
+        {% empty %}
+          <li>No category listed.</li>
+        {% endfor %}
+      </ul>
+      <div id="img_listing">
+        {% if listing.img_url %}
+          <img  src="{{listing.img_url}}" width=500px height=370px; />
+        {% else %}
+          <img  src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png" width=250px height=270px; />
+        {% endif %}
+      </div>
+    </div>
+    {% if listing.active == True %}
+      <div id="bid_form">
+        <h2>Try to get it!</h2>
+        <p>Add it to your watchlist to see if you got it.</p>
+        <h3>{%if bid_winner%}${{ bid_winner.value }}{% else %}${{listing.price}}{% endif%}</h3>
+        <p style="color:rgb(113, 170, 172); font-size:13px; position:relative; top:7px; left:2px;">{{ number_of_bids }} bid(s) so far were made on {{listing.title }}. {% if request.user  == bid_winner.bid_user  %} {{ error }} {% endif %}</p>
+
+        <form  class="form-group" action="{% url 'bid' listing.id %}" method="post">
+          {% csrf_token %}
+          <input id="money" class="form-control" type="number" name="money" placeholder="Bid" />
+          <input class="btn" id="bid_submit" type="submit" value="Place Bid" />
+        </form>
+    {% endif %}
+
+      {% if messages %}
+        {% for message in messages %}
+          {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+          <div class="alert alert-danger" role="alert">
+            {{ message }}
+          </div>
+          {% endif %}
+          {% if listing.active == False %}
+              {% if request.user ==  bid_winner.bid_user %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                <div id="final" class="alert alert-success" role="alert">
+                  {{ message }}
+                </div>
+                {% endif %}
+              {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+    </div>
+
+    <div id="comments">
+      <h3>Comments:</h3>
+      <table>
+        {% for comment in comments %}
+          <tr>
+            <td> '{{comment.content}}' <span style="font-size:14px;color:rgb(40, 119, 115);" > (by {{comment.author.username}} at {{comment.time}})</span></td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td>No comments yet.</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <form action="{% url 'comment' listing.id %}" method="post">
+        {% csrf_token %}
+        <input id="com" type="text" name="comment" placeholder="Add a comment" />
+        <input type="submit" id="acom" class="btn" value="Add" />
+      </form>
+      <br />
+    </div>
+
+
+{% endblock %}
